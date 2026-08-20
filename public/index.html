@@ -1,640 +1,908 @@
 <!DOCTYPE html>
-<html lang="it" class="dark">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Safety Checker | Analisi Sicurezza Web</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Safety Checker | Analisi sicurezza di link e domini</title>
+<meta name="description" content="Controlla gratuitamente se un link o un dominio è sicuro: malware, phishing, reputazione, certificato ed età del dominio, in pochi secondi.">
+<link rel="canonical" href="https://tivustream.com/check-tool/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Link Safety Checker">
+<meta property="og:description" content="Controlla gratuitamente se un link o un dominio è sicuro.">
+<meta property="og:url" content="https://tivustream.com/check-tool/">
 
-        html {
-            color-scheme: dark;
-        }
+<style>
+/* ------------------------------------------------------------------
+   1. TOKEN DI COLORE
+   Tutti i colori della pagina nascono qui. Cambiare tema significa
+   cambiare questo blocco e nient'altro.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
 
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-        }
+  --page:        #f7f8fa;
+  --card:        #ffffff;
+  --inset:       #f2f4f7;
+  --border:      rgba(15, 23, 42, .10);
+  --shadow:      0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
 
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
+  --text:        #0f172a;
+  --text-2:      #475569;
+  --text-3:      #64748b;
 
-        button,
-        input,
-        textarea,
-        select {
-            font: inherit;
-        }
+  --accent:      #4f46e5;
+  --accent-hover:#4338ca;
+  --accent-fg:   #ffffff;
+  --track:       #e2e8f0;
+}
 
-        .container { width: 100%; }
-        .min-h-screen { min-height: 100vh; }
-        .hidden { display: none !important; }
-        .inline-block { display: inline-block; }
-        .flex { display: flex; }
-        .grid { display: grid; }
-        .flex-1 { flex: 1 1 0%; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .items-start { align-items: flex-start; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .relative { position: relative; }
-        .absolute { position: absolute; }
-        .inset-0 { inset: 0; }
-        .inset-y-0 { top: 0; bottom: 0; }
-        .left-4 { left: 1rem; }
-        .w-full { width: 100%; }
-        .w-2 { width: .5rem; }
-        .w-4 { width: 1rem; }
-        .w-5 { width: 1.25rem; }
-        .w-12 { width: 3rem; }
-        .w-32 { width: 8rem; }
-        .h-2 { height: .5rem; }
-        .h-4 { height: 1rem; }
-        .h-5 { height: 1.25rem; }
-        .h-12 { height: 3rem; }
-        .h-32 { height: 8rem; }
-        .h-auto { height: auto; }
-        .h-full { height: 100%; }
-        .max-w-4xl { max-width: 56rem; }
-        .max-w-xl { max-width: 36rem; }
-        .max-w-\[200px\] { max-width: 200px; }
-        .max-w-\[220px\] { max-width: 220px; }
-        .mx-auto { margin-left: auto; margin-right: auto; }
-        .mb-1 { margin-bottom: .25rem; }
-        .mb-2 { margin-bottom: .5rem; }
-        .mb-3 { margin-bottom: .75rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mb-6 { margin-bottom: 1.5rem; }
-        .mb-8 { margin-bottom: 2rem; }
-        .mb-12 { margin-bottom: 3rem; }
-        .mt-1 { margin-top: .25rem; }
-        .mt-6 { margin-top: 1.5rem; }
-        .mt-20 { margin-top: 5rem; }
-        .ml-4 { margin-left: 1rem; }
-        .p-2 { padding: .5rem; }
-        .p-3 { padding: .75rem; }
-        .p-4 { padding: 1rem; }
-        .p-6 { padding: 1.5rem; }
-        .px-3 { padding-left: .75rem; padding-right: .75rem; }
-        .px-4 { padding-left: 1rem; padding-right: 1rem; }
-        .px-8 { padding-left: 2rem; padding-right: 2rem; }
-        .py-1 { padding-top: .25rem; padding-bottom: .25rem; }
-        .py-2 { padding-top: .5rem; padding-bottom: .5rem; }
-        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
-        .py-20 { padding-top: 5rem; padding-bottom: 5rem; }
-        .pb-12 { padding-bottom: 3rem; }
-        .pt-12 { padding-top: 3rem; }
-        .pl-12 { padding-left: 3rem; }
-        .pr-4 { padding-right: 1rem; }
-        .gap-2 { gap: .5rem; }
-        .gap-3 { gap: .75rem; }
-        .gap-4 { gap: 1rem; }
-        .gap-6 { gap: 1.5rem; }
-        .gap-12 { gap: 3rem; }
-        .space-y-2 > * + * { margin-top: .5rem; }
-        .space-y-3 > * + * { margin-top: .75rem; }
-        .space-y-4 > * + * { margin-top: 1rem; }
-        .space-y-6 > * + * { margin-top: 1.5rem; }
-        .grid-cols-1 { grid-template-columns: 1fr; }
-        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .rounded-full { border-radius: 9999px; }
-        .rounded-lg { border-radius: .5rem; }
-        .rounded-xl { border-radius: .75rem; }
-        .rounded-2xl { border-radius: 1rem; }
-        .rounded-3xl { border-radius: 1.5rem; }
-        .border { border-width: 1px; border-style: solid; }
-        .border-4 { border-width: 4px; border-style: solid; }
-        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
-        .border-t { border-top-width: 1px; border-top-style: solid; }
-        .border-none { border: none; }
-        .border-transparent { border-color: transparent; }
-        .border-white\/5 { border-color: rgba(255,255,255,.05); }
-        .border-indigo-500 { border-color: #6366f1; }
-        .border-t-transparent { border-top-color: transparent; }
-        .border-slate-700 { border-color: #334155; }
-        .bg-transparent { background-color: transparent; }
-        .bg-emerald-500\/10 { background-color: rgba(16,185,129,.1); }
-        .bg-emerald-500\/20 { background-color: rgba(16,185,129,.2); }
-        .bg-amber-500 { background-color: #f59e0b; }
-        .bg-amber-500\/20 { background-color: rgba(245,158,11,.2); }
-        .bg-indigo-600 { background-color: #4f46e5; }
-        .bg-rose-500 { background-color: #f43f5e; }
-        .bg-rose-500\/10 { background-color: rgba(244,63,94,.1); }
-        .bg-rose-500\/20 { background-color: rgba(244,63,94,.2); }
-        .bg-slate-800 { background-color: #1e293b; }
-        .bg-slate-800\/10 { background-color: rgba(30,41,59,.1); }
-        .bg-slate-800\/30 { background-color: rgba(30,41,59,.3); }
-        .bg-slate-800\/40 { background-color: rgba(30,41,59,.4); }
-        .bg-slate-800\/50 { background-color: rgba(30,41,59,.5); }
-        .bg-slate-900\/50 { background-color: rgba(15,23,42,.5); }
-        .text-white { color: #fff; }
-        .text-slate-200 { color: #e2e8f0; }
-        .text-slate-300 { color: #cbd5e1; }
-        .text-slate-400 { color: #94a3b8; }
-        .text-slate-500 { color: #64748b; }
-        .text-slate-600 { color: #475569; }
-        .text-slate-800 { color: #1e293b; }
-        .text-indigo-400 { color: #818cf8; }
-        .text-indigo-500 { color: #6366f1; }
-        .text-emerald-400 { color: #34d399; }
-        .text-amber-400 { color: #fbbf24; }
-        .text-rose-400 { color: #fb7185; }
-        .placeholder-slate-500::placeholder { color: #64748b; }
-        .text-\[9px\] { font-size: 9px; }
-        .text-\[10px\] { font-size: 10px; }
-        .text-xs { font-size: .75rem; }
-        .text-sm { font-size: .875rem; }
-        .text-lg { font-size: 1.125rem; }
-        .text-xl { font-size: 1.25rem; }
-        .text-3xl { font-size: 1.875rem; }
-        .text-4xl { font-size: 2.25rem; }
-        .font-medium { font-weight: 500; }
-        .font-semibold { font-weight: 600; }
-        .font-bold { font-weight: 700; }
-        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        .italic { font-style: italic; }
-        .uppercase { text-transform: uppercase; }
-        .leading-tight { line-height: 1.25; }
-        .leading-relaxed { line-height: 1.625; }
-        .tracking-tight { letter-spacing: -.025em; }
-        .tracking-wide { letter-spacing: .025em; }
-        .tracking-wider { letter-spacing: .05em; }
-        .tracking-widest { letter-spacing: .1em; }
-        .truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .opacity-60 { opacity: .6; }
-        .cursor-pointer { cursor: pointer; }
-        .pointer-events-none { pointer-events: none; }
-        .list-none { list-style: none; }
-        .outline-none { outline: none; }
-        .focus\:ring-0:focus { box-shadow: none; outline: none; }
-        .transition-all { transition: all .2s ease; }
-        .transition-colors { transition: color .2s ease, background-color .2s ease, border-color .2s ease; }
-        .transition-transform { transition: transform .2s ease; }
-        .duration-1000 { transition-duration: 1s; }
-        .duration-200 { transition-duration: .2s; }
-        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); }
-        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,.3), 0 4px 6px -4px rgba(0,0,0,.3); }
-        .shadow-indigo-500\/20 { box-shadow: 0 10px 30px rgba(99,102,241,.2); }
-        .drop-shadow-xl { filter: drop-shadow(0 20px 15px rgba(0,0,0,.35)); }
-        .animate-spin { animation: lsc-spin 1s linear infinite; }
-        .hover\:bg-indigo-500:hover { background-color: #6366f1; }
-        .hover\:bg-slate-800\/50:hover { background-color: rgba(30,41,59,.5); }
-        .hover\:text-white:hover { color: #fff; }
-        .active\:scale-95:active { transform: scale(.95); }
+/* Il tema scuro segue l'impostazione del sistema operativo dell'utente:
+   chi naviga in chiaro vede la pagina in chiaro, come il resto del sito. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
 
-        details.group[open] .group-open\:rotate-180 { transform: rotate(180deg); }
+    --page:        #0f172a;
+    --card:        #1a2436;
+    --inset:       #141d2e;
+    --border:      rgba(255, 255, 255, .10);
+    --shadow:      0 1px 2px rgba(0,0,0,.30), 0 8px 24px rgba(0,0,0,.25);
 
-        @media (min-width: 768px) {
-            .md\:flex-row { flex-direction: row; }
-            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .md\:col-span-2 { grid-column: span 2 / span 2; }
-            .md\:max-auto { max-width: none; }
-        }
+    --text:        #f1f5f9;
+    --text-2:      #cbd5e1;
+    --text-3:      #94a3b8;
 
-        @keyframes lsc-spin {
-            to { transform: rotate(360deg); }
-        }
+    --accent:      #6366f1;
+    --accent-hover:#818cf8;
+    --accent-fg:   #ffffff;
+    --track:       #263449;
+  }
+}
 
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-        }
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .animate-pulse-soft {
-            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-    </style>
+/* ------------------------------------------------------------------
+   2. COLORI DI STATO — riservati, identici nei due temi.
+   Non vengono mai usati per decorazione: se vedi uno di questi colori,
+   sta dicendo qualcosa. Verificati per contrasto (>=3:1 su entrambi i
+   fondali) e per distinguibilita' in caso di daltonismo.
+   ------------------------------------------------------------------ */
+:root {
+  --good: #0ca30c;
+  --warn: #fab219;
+  --crit: #d03b3b;
+  --good-tint: color-mix(in srgb, var(--good) 12%, transparent);
+  --warn-tint: color-mix(in srgb, var(--warn) 16%, transparent);
+  --crit-tint: color-mix(in srgb, var(--crit) 12%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   3. BASE
+   ------------------------------------------------------------------ */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 1rem 4rem;
+  background: var(--page);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 56rem; margin: 0 auto; }
+
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+p { margin: 0; }
+a { color: inherit; }
+
+button, input { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.hidden { display: none !important; }
+
+/* ------------------------------------------------------------------
+   4. TESTATA E RICERCA
+   ------------------------------------------------------------------ */
+header { text-align: center; padding: 3rem 0 2rem; }
+
+header img { max-width: 200px; height: auto; margin-bottom: 1.5rem; }
+
+header h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); font-weight: 700; letter-spacing: -.02em; }
+
+header p {
+  margin: .75rem auto 0; max-width: 34rem;
+  color: var(--text-2); font-size: 1.05rem;
+}
+
+.search {
+  display: flex; flex-direction: column; gap: .5rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 1rem; padding: .5rem; box-shadow: var(--shadow);
+}
+
+.search-field { position: relative; flex: 1; display: flex; align-items: center; }
+
+.search-field .icon {
+  position: absolute; left: .875rem;
+  width: 1.15rem; height: 1.15rem; color: var(--text-3); pointer-events: none;
+}
+
+.search input {
+  width: 100%; border: 0; background: transparent;
+  padding: .9rem .9rem .9rem 2.75rem; font-size: 1rem; outline: none;
+}
+.search input::placeholder { color: var(--text-3); }
+
+.search button {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  background: var(--accent); color: var(--accent-fg);
+  border: 0; border-radius: .75rem; padding: .9rem 1.75rem;
+  font-weight: 600; cursor: pointer; transition: background .15s;
+}
+.search button:hover:not(:disabled) { background: var(--accent-hover); }
+.search button:disabled { opacity: .7; cursor: progress; }
+.search button .icon { width: 1.15rem; height: 1.15rem; }
+
+@media (min-width: 640px) { .search { flex-direction: row; } }
+
+/* Messaggio d'errore in pagina: sostituisce alert(), che blocca
+   la pagina e non viene annunciato dagli screen reader. */
+.notice {
+  display: flex; align-items: flex-start; gap: .625rem;
+  margin-top: 1rem; padding: .875rem 1rem;
+  border: 1px solid var(--crit); border-radius: .75rem;
+  background: var(--crit-tint); font-size: .9rem;
+}
+.notice .icon { width: 1.15rem; height: 1.15rem; color: var(--crit); flex: none; margin-top: .1rem; }
+
+/* ------------------------------------------------------------------
+   5. CARICAMENTO
+   ------------------------------------------------------------------ */
+.loading { text-align: center; padding: 4rem 0; color: var(--text-2); }
+
+.spinner {
+  width: 2.5rem; height: 2.5rem; margin: 0 auto 1rem;
+  border: 3px solid var(--track); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 3s; }
+  * { transition-duration: .01ms !important; }
+}
+
+/* ------------------------------------------------------------------
+   6. VERDETTO — l'elemento piu' importante della pagina.
+   Icona + parola + colore: mai il colore da solo.
+   ------------------------------------------------------------------ */
+.verdict {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1.25rem 1.5rem; border-radius: 1rem;
+  border: 1px solid currentColor;
+}
+.verdict .icon { width: 2.25rem; height: 2.25rem; flex: none; }
+.verdict-label { font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; }
+.verdict-text  { margin-top: .15rem; font-size: .925rem; color: var(--text-2); }
+.verdict-body  { min-width: 0; }
+
+.verdict.is-safe  { color: var(--good); background: var(--good-tint); }
+.verdict.is-warn  { color: var(--warn); background: var(--warn-tint); }
+.verdict.is-crit  { color: var(--crit); background: var(--crit-tint); }
+
+/* Il titolo del verdetto porta il colore dello stato; il testo
+   descrittivo resta in inchiostro normale, cosi' non dipende dal
+   contrasto del colore di stato. */
+.verdict-label { color: currentColor; }
+
+.advice {
+  margin-top: .625rem; padding-top: .625rem;
+  border-top: 1px solid var(--border);
+  font-size: .875rem; color: var(--text-2);
+}
+
+/* ------------------------------------------------------------------
+   7. SCHEDE
+   ------------------------------------------------------------------ */
+.grid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
+@media (min-width: 768px) {
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .span-2 { grid-column: span 2; }
+}
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 1rem; padding: 1.5rem; box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.card-head {
+  display: flex; align-items: center; gap: .625rem; margin-bottom: 1.25rem;
+}
+.card-head .icon { width: 1.15rem; height: 1.15rem; color: var(--accent); }
+.card-head h4 { font-size: .95rem; font-weight: 600; }
+
+/* Punteggio */
+.score-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.score-ring { position: relative; width: 8rem; height: 8rem; margin-bottom: 1rem; }
+.score-ring svg { width: 100%; height: 100%; }
+.score-ring .track { stroke: var(--track); }
+.score-ring .value { transition: stroke-dashoffset .8s ease, stroke .3s; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round; }
+.score-ring .readout {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.score-num { font-size: 1.9rem; font-weight: 700; }
+.score-cap { font-size: .625rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: .375rem;
+  padding: .3rem .75rem; border-radius: 999px;
+  font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.badge .icon { width: .85rem; height: .85rem; }
+.badge.is-safe { color: var(--good); background: var(--good-tint); }
+.badge.is-warn { color: var(--warn); background: var(--warn-tint); }
+.badge.is-crit { color: var(--crit); background: var(--crit-tint); }
+
+/* Intestazione del dominio */
+.site-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.site-id { display: flex; align-items: flex-start; gap: .875rem; min-width: 0; }
+.site-id img {
+  width: 2.75rem; height: 2.75rem; flex: none; border-radius: .625rem;
+  background: var(--inset); border: 1px solid var(--border); padding: .375rem;
+}
+.site-name { font-size: 1.15rem; font-weight: 700; word-break: break-word; }
+.site-title { font-size: .875rem; color: var(--text-2); margin-top: .1rem; }
+.site-path {
+  margin-top: .25rem; font-size: .75rem; color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+}
+
+.http-badge { flex: none; padding: .25rem .625rem; border-radius: .5rem; font-size: .75rem; font-weight: 600; }
+.http-badge.ok  { color: var(--good); background: var(--good-tint); }
+.http-badge.bad { color: var(--crit); background: var(--crit-tint); }
+
+/* Riquadri dati */
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; }
+.tile { background: var(--inset); border: 1px solid var(--border); border-radius: .75rem; padding: .75rem; min-width: 0; }
+.tile-cap { font-size: .625rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: .25rem; }
+.tile-val { font-size: .875rem; font-weight: 600; word-break: break-word; }
+.tile-sub { font-size: .7rem; color: var(--text-3); margin-top: .15rem; }
+
+/* Righe chiave/valore */
+.rows > * + * { border-top: 1px solid var(--border); }
+.row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .625rem 0; font-size: .875rem; }
+.row dt { color: var(--text-2); flex: none; }
+.row dd { margin: 0; font-weight: 600; text-align: right; word-break: break-word; }
+.row-note { font-size: .7rem; color: var(--text-3); font-style: italic; padding-bottom: .5rem; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.t-good { color: var(--good); }
+.t-warn { color: var(--warn); }
+.t-crit { color: var(--crit); }
+.t-mute { color: var(--text-3); }
+
+/* Header di sicurezza */
+.hdr-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: var(--inset); border: 1px solid var(--border);
+  border-radius: .75rem; padding: .75rem; margin-bottom: .5rem;
+}
+.hdr-name { font-size: .875rem; font-weight: 600; }
+.hdr-desc { font-size: .7rem; color: var(--text-3); }
+.hdr-state { display: inline-flex; align-items: center; gap: .3rem; font-size: .75rem; font-weight: 600; flex: none; }
+.hdr-state .icon { width: 1rem; height: 1rem; }
+
+/* Analisi dettagliata */
+.bd-item { display: flex; align-items: flex-start; gap: .5rem; padding: .3rem 0; font-size: .8rem; }
+.bd-item .icon { width: .95rem; height: .95rem; flex: none; margin-top: .15rem; }
+
+/* Meta */
+.meta-box { background: var(--inset); border: 1px solid var(--border); border-radius: .75rem; padding: 1rem; }
+.meta-cap { font-size: .625rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: .5rem; }
+.meta-desc { font-size: .875rem; color: var(--text-2); font-style: italic; }
+
+/* ------------------------------------------------------------------
+   8. PIE' DI PAGINA
+   ------------------------------------------------------------------ */
+footer { margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid var(--border); }
+footer h5 { display: flex; align-items: center; gap: .5rem; font-size: .95rem; font-weight: 600; margin-bottom: 1rem; }
+footer h5 .icon { width: 1rem; height: 1rem; color: var(--accent); }
+footer p { color: var(--text-2); font-size: .875rem; }
+
+details { margin-bottom: .625rem; }
+summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .75rem 1rem; background: var(--inset); border: 1px solid var(--border);
+  border-radius: .75rem; cursor: pointer; font-size: .875rem; list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary .icon { width: 1rem; height: 1rem; color: var(--text-3); transition: transform .2s; flex: none; }
+details[open] summary .icon { transform: rotate(180deg); }
+details > div { padding: 1rem; font-size: .875rem; color: var(--text-2); }
+
+.colophon { margin-top: 2.5rem; text-align: center; font-size: .75rem; color: var(--text-3); }
+.colophon nav { display: flex; justify-content: center; gap: 1.5rem; margin-top: .75rem; }
+.colophon a:hover { color: var(--text); }
+
+.stack > * + * { margin-top: 1.25rem; }
+</style>
 </head>
-<body class="text-slate-200 min-h-screen pb-12">
+<body>
 
-    <div class="container mx-auto px-4 max-w-4xl pt-12">
-        <!-- Header -->
-        <header class="text-center mb-12">
-            <div class="flex justify-center mb-6">
-                <img src="logo.png" alt="TivuStream Logo" class="max-w-[220px] h-auto drop-shadow-xl opacity-95">
-            </div>
-            <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Link Safety Checker</h1>
-            <p class="text-slate-400 max-w-xl mx-auto text-lg">
-                Analisi istantanea di sicurezza, reputazione e affidabilità per qualsiasi sito web.
-            </p>
-        </header>
+<!-- Icone incorporate: nessuna dipendenza da CDN esterni.
+     Prima venivano da unpkg.com, e se quel server non rispondeva
+     la pagina smetteva di funzionare del tutto. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="i-base" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+  </symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+  </symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>
+  </symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3 7 2 2 4-4M3 17l2 2 4-4M13 6h8M13 12h8M13 18h8"/>
+  </symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5M9 13h6M9 17h6"/>
+  </symbol>
+  <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+  </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6 9 6 6 6-6"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>
+  </symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
+  </symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>
+  </symbol>
+</svg>
 
-        <!-- Search Input -->
-        <div class="glass rounded-3xl p-2 mb-8 flex flex-col md:flex-row gap-2 shadow-2xl">
-            <div class="relative flex-1">
-                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                    <i data-lucide="globe" class="w-5 h-5 text-slate-500"></i>
-                </div>
-                <input type="text" id="urlInput" 
-                    placeholder="Inserisci un dominio (es. google.com)" 
-                    class="w-full bg-transparent border-none py-4 pl-12 pr-4 focus:ring-0 text-white placeholder-slate-500 text-lg outline-none">
-            </div>
-            <button onclick="handleScan()" id="scanBtn"
-                class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-indigo-500/20">
-                <span id="btnText">Analizza Ora</span>
-                <i data-lucide="arrow-right" class="w-5 h-5" id="btnIcon"></i>
-            </button>
-        </div>
+<div class="wrap">
 
-        <!-- Loading State -->
-        <div id="loading" class="hidden text-center py-20">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
-            <p class="text-slate-400 animate-pulse-soft">Analisi profonda in corso...</p>
-        </div>
+  <header>
+    <img src="logo.png" alt="TivuStream" width="200" height="60">
+    <h1>Link Safety Checker</h1>
+    <p>Controlla se un link o un dominio è sicuro: malware, phishing, reputazione, certificato ed età del dominio.</p>
+  </header>
 
-        <!-- Results Area -->
-        <div id="results" class="hidden space-y-6">
-            <!-- Score & Quick Info -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Trust Score Ring -->
-                <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center text-center">
-                    <div class="relative w-32 h-32 mb-4">
-                        <svg class="w-full h-full" viewBox="0 0 100 100">
-                            <circle class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50"/>
-                            <circle id="scoreRing" class="text-indigo-500 transition-all duration-1000" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50"/>
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center flex-col">
-                            <span id="scoreText" class="text-3xl font-bold text-white">0</span>
-                            <span class="text-[10px] uppercase tracking-widest text-slate-500">Score</span>
-                        </div>
-                    </div>
-                    <div id="trustBadge" class="px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-2"></div>
-                    <p id="verdictText" class="text-sm font-medium text-slate-300"></p>
-                </div>
+  <form class="search" id="scanForm" autocomplete="off">
+    <div class="search-field">
+      <svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg>
+      <label class="sr-only" for="urlInput">Dominio o link da analizzare</label>
+      <input type="text" id="urlInput" name="url"
+             placeholder="Incolla un link o un dominio (es. sito.com/pagina)"
+             spellcheck="false" autocapitalize="off">
+    </div>
+    <button type="submit" id="scanBtn">
+      <span id="btnText">Analizza</span>
+      <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
+    </button>
+  </form>
 
-                <!-- Domain Info Card -->
-                <div class="glass rounded-3xl p-6 md:col-span-2">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-4">
-                            <img id="faviconImg" src="" alt="" class="w-12 h-12 rounded-xl bg-slate-800 p-2 border border-slate-700">
-                            <div>
-                                <h3 id="resDomain" class="text-xl font-bold text-white leading-tight"></h3>
-                                <p id="resTitle" class="text-slate-400 text-sm truncate max-w-[200px] md:max-auto"></p>
-                            </div>
-                        </div>
-                        <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium"></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
-                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Risposta</p>
-                            <p id="resTime" class="text-sm font-semibold text-white"></p>
-                        </div>
-                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
-                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Server</p>
-                            <p id="resServer" class="text-sm font-semibold text-white truncate"></p>
-                        </div>
-                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
-                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">CDN</p>
-                            <p id="resCDN" class="text-sm font-semibold text-white"></p>
-                        </div>
-                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
-                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">SSL Cert</p>
-                            <p id="resSSL" class="text-xs font-semibold text-white leading-tight"></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div id="notice" class="notice hidden" role="alert">
+    <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+    <span id="noticeText"></span>
+  </div>
 
-            <!-- Detail Tabs/Grids -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Security Headers -->
-                <div class="glass rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-6">
-                        <i data-lucide="lock" class="w-5 h-5 text-indigo-400"></i>
-                        <h4 class="font-bold text-white">Security Headers</h4>
-                    </div>
-                    <div id="headerList" class="space-y-3">
-                        <!-- Headers populated by JS -->
-                    </div>
-                </div>
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <p>Analisi in corso…</p>
+  </div>
 
-                <!-- Network & IP -->
-                <div class="glass rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-6">
-                        <i data-lucide="activity" class="w-5 h-5 text-indigo-400"></i>
-                        <h4 class="font-bold text-white">Network & Reputation</h4>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">IP Address</span>
-                            <span id="resIP" class="text-sm font-mono font-medium text-white"></span>
-                        </div>
-                        <div class="flex flex-col py-2 border-b border-white/5">
-                            <div class="flex justify-between items-center w-full">
-                                <span class="text-sm text-slate-400">IP Reputation</span>
-                                <span id="resReputation" class="text-sm font-medium"></span>
-                            </div>
-                            <p id="resRepNote" class="text-[10px] text-slate-500 mt-1 hidden italic"></p>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Safe Browsing</span>
-                            <span id="resSafeBrowsing" class="text-sm font-medium"></span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Hosting</span>
-                            <span id="resHosting" class="text-sm font-medium text-white truncate ml-4 text-right"></span>
-                        </div>
-                    </div>
-                </div>
+  <!-- aria-live: annuncia il risultato a chi usa uno screen reader,
+       che altrimenti non saprebbe mai che l'analisi e' terminata. -->
+  <div id="results" class="stack hidden" aria-live="polite">
 
-                <!-- Domain Age & Risk -->
-                <div class="glass rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-6">
-                        <i data-lucide="calendar" class="w-5 h-5 text-indigo-400"></i>
-                        <h4 class="font-bold text-white">Domain Intelligence</h4>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Creato il</span>
-                            <span id="resCreated" class="text-sm font-medium text-white"></span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Età Dominio</span>
-                            <span id="resAge" class="text-sm font-medium text-white"></span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Rischio Dominio</span>
-                            <span id="resRisk" class="text-sm font-medium"></span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-white/5">
-                            <span class="text-sm text-slate-400">Ultimo Aggiornamento</span>
-                            <span id="resUpdated" class="text-sm font-medium text-white"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Breakdown -->
-                <div class="glass rounded-3xl p-6">
-                    <div class="flex items-center gap-3 mb-6">
-                        <i data-lucide="list-checks" class="w-5 h-5 text-indigo-400"></i>
-                        <h4 class="font-bold text-white">Analisi Dettagliata</h4>
-                    </div>
-                    <div id="breakdownList" class="space-y-2 text-xs">
-                        <!-- Breakdown populated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Meta Info -->
-            <div id="metaCard" class="glass rounded-3xl p-6 hidden">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
-                    <h4 class="font-bold text-white">Meta Informazioni</h4>
-                </div>
-                <div class="bg-slate-900/50 p-4 rounded-2xl border border-white/5">
-                    <p class="text-xs text-slate-500 uppercase tracking-widest mb-2">Meta Description</p>
-                    <p id="resDesc" class="text-sm text-slate-300 italic"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FAQ / Footer -->
-        <footer class="mt-20 border-t border-white/5 pt-12">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-                <div>
-                    <h5 class="text-white font-bold mb-4 flex items-center gap-2">
-                        <i data-lucide="help-circle" class="w-4 h-4 text-indigo-400"></i>
-                        Guida ai risultati
-                    </h5>
-                    <div class="space-y-4 text-sm text-slate-400">
-                        <details class="group">
-                            <summary class="cursor-pointer list-none flex justify-between items-center p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors">
-                                <span>Cos'è il Trust Score?</span>
-                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
-                            </summary>
-                            <div class="p-4 bg-slate-800/10 rounded-xl mt-1">
-                                Un algoritmo che valuta HTTPS, header di sicurezza, reputazione IP, segnalazioni di Google e l'età del dominio per determinare l'affidabilità complessiva.
-                            </div>
-                        </details>
-                        <details class="group">
-                            <summary class="cursor-pointer list-none flex justify-between items-center p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors">
-                                <span>Perché l'età del dominio è importante?</span>
-                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
-                            </summary>
-                            <div class="p-4 bg-slate-800/10 rounded-xl mt-1">
-                                I siti usati per phishing o truffe spesso usano domini registrati da pochissimi giorni o settimane. Un dominio "vecchio" è generalmente più affidabile.
-                            </div>
-                        </details>
-                    </div>
-                </div>
-                <div>
-                    <h5 class="text-white font-bold mb-4 flex items-center gap-2">
-                        <i data-lucide="shield" class="w-4 h-4 text-indigo-400"></i>
-                        Privacy & Sicurezza
-                    </h5>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Questo strumento è progettato per la trasparenza. Non memorizziamo i dati analizzati, non tracciamo le tue ricerche e non installiamo cookie di terze parti. Tutte le analisi avvengono in tempo reale tramite Cloudflare Workers.
-                    </p>
-                </div>
-            </div>
-            
-            <div class="text-center text-slate-500 text-xs">
-                <p class="mb-4">© 2018 - 2026 TivuStream Link Safety Tool. Tutti i diritti riservati.</p>
-                <div class="flex justify-center gap-6">
-                    <a href="https://tivustream.com/" class="hover:text-white transition-colors">Home</a>
-                    <a href="https://tivustream.com/privacy-policy/" class="hover:text-white transition-colors">Privacy</a>
-                    <a href="https://tivustream.com/contatti/" class="hover:text-white transition-colors">Contatti</a>
-                </div>
-            </div>
-        </footer>
+    <div id="verdict" class="verdict">
+      <svg class="icon" id="verdictIcon" aria-hidden="true"><use href="#i-check"/></svg>
+      <div class="verdict-body">
+        <div class="verdict-label" id="verdictLabel"></div>
+        <p class="verdict-text" id="verdictText"></p>
+        <p class="advice hidden" id="verdictAdvice"></p>
+      </div>
     </div>
 
-    <script>
-        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                lucide.createIcons();
-            }
-        }
+    <div class="grid grid-3">
 
-        async function handleScan() {
-            const urlInput = document.getElementById('urlInput');
-            const scanBtn = document.getElementById('scanBtn');
-            const btnText = document.getElementById('btnText');
-            const btnIcon = document.getElementById('btnIcon');
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
+      <div class="card score-card">
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="8"/>
+            <circle class="value" id="scoreRing" cx="50" cy="50" r="42" fill="none" stroke-width="8"
+                    stroke-dasharray="264" stroke-dashoffset="264"/>
+          </svg>
+          <div class="readout">
+            <span class="score-num" id="scoreText">0</span>
+            <span class="score-cap">Score</span>
+          </div>
+        </div>
+        <span class="badge" id="trustBadge">
+          <svg class="icon" id="badgeIcon" aria-hidden="true"><use href="#i-check"/></svg>
+          <span id="badgeText"></span>
+        </span>
+      </div>
 
-            let domain = urlInput.value.trim();
-            domain = domain.replace(/^https?:\/\//, "").split('/')[0];
+      <div class="card span-2">
+        <div class="site-head">
+          <div class="site-id">
+            <img id="faviconImg" src="" alt="" width="44" height="44">
+            <div style="min-width:0">
+              <h3 class="site-name" id="resDomain"></h3>
+              <p class="site-title" id="resTitle"></p>
+              <p class="site-path hidden" id="resPath"></p>
+            </div>
+          </div>
+          <span class="http-badge" id="statusBadge"></span>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <p class="tile-cap">Risposta</p>
+            <p class="tile-val" id="resTime"></p>
+          </div>
+          <div class="tile">
+            <p class="tile-cap">Server</p>
+            <p class="tile-val" id="resServer"></p>
+            <p class="tile-sub hidden" id="resServerNote"></p>
+          </div>
+          <div class="tile">
+            <p class="tile-cap">CDN</p>
+            <p class="tile-val" id="resCDN"></p>
+          </div>
+          <div class="tile">
+            <p class="tile-cap">Certificato</p>
+            <p class="tile-val" id="resSSL"></p>
+            <p class="tile-sub" id="resSSLSub"></p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            if (!domain) {
-                alert("Per favore inserisci un dominio valido.");
-                return;
-            }
+    <div class="grid grid-2">
 
-            loading.classList.remove('hidden');
-            results.classList.add('hidden');
-            scanBtn.disabled = true;
-            btnText.innerText = "Analizzando...";
-            btnIcon.outerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin" id="btnIcon"></i>';
-            lucide.createIcons();
+      <div class="card">
+        <div class="card-head">
+          <svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg>
+          <h4>Header di sicurezza</h4>
+        </div>
+        <div id="headerList"></div>
+      </div>
 
-            try {
-                const response = await fetch(`https://tivustream-check-tool.tivustream.workers.dev/?url=${domain}`);
-                const data = await response.json();
-                if (data.error) alert(data.error);
-                else renderResults(data);
-            } catch (error) {
-                console.error(error);
-                alert("Si è verificato un errore durante l'analisi. Riprova.");
-            } finally {
-                loading.classList.add('hidden');
-                scanBtn.disabled = false;
-                btnText.innerText = "Analizza Ora";
-                const currentIcon = document.getElementById('btnIcon');
-                currentIcon.outerHTML = '<i data-lucide="arrow-right" class="w-5 h-5" id="btnIcon"></i>';
-                if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                    lucide.createIcons();
-                }
-            }
-        }
+      <div class="card">
+        <div class="card-head">
+          <svg class="icon" aria-hidden="true"><use href="#i-activity"/></svg>
+          <h4>Rete e reputazione</h4>
+        </div>
+        <dl class="rows">
+          <div class="row"><dt>Indirizzo IP</dt><dd class="mono" id="resIP"></dd></div>
+          <div class="row"><dt>Reputazione IP</dt><dd id="resReputation"></dd></div>
+          <p class="row-note hidden" id="resRepNote"></p>
+          <div class="row"><dt>Safe Browsing</dt><dd id="resSafeBrowsing"></dd></div>
+          <div class="row"><dt>Hosting</dt><dd id="resHosting"></dd></div>
+        </dl>
+      </div>
 
-        function renderResults(data) {
-            const results = document.getElementById('results');
-            results.classList.remove('hidden');
-            document.getElementById('loading').classList.add('hidden');
+      <div class="card">
+        <div class="card-head">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg>
+          <h4>Informazioni sul dominio</h4>
+        </div>
+        <dl class="rows">
+          <div class="row"><dt>Creato il</dt><dd id="resCreated"></dd></div>
+          <div class="row"><dt>Età</dt><dd id="resAge"></dd></div>
+          <div class="row"><dt>Rischio</dt><dd id="resRisk"></dd></div>
+          <div class="row"><dt>Ultimo aggiornamento</dt><dd id="resUpdated"></dd></div>
+        </dl>
+      </div>
 
-            const scoreRing = document.getElementById('scoreRing');
-            const scoreText = document.getElementById('scoreText');
-            const targetScore = data.trust_score || 0;
-            const circumference = 2 * Math.PI * 42;
-            const offset = circumference - (targetScore / 100) * circumference;
-            scoreRing.style.strokeDashoffset = offset;
-            
-            if (targetScore >= 80) scoreRing.className = "text-emerald-500 transition-all duration-1000";
-            else if (targetScore >= 50) scoreRing.className = "text-amber-500 transition-all duration-1000";
-            else scoreRing.className = "text-rose-500 transition-all duration-1000";
+      <div class="card">
+        <div class="card-head">
+          <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+          <h4>Analisi dettagliata</h4>
+        </div>
+        <div id="breakdownList"></div>
+      </div>
+    </div>
 
-            let currentScore = 0;
-            const scoreInterval = setInterval(() => {
-                if (currentScore >= targetScore) {
-                    clearInterval(scoreInterval);
-                    scoreText.innerText = targetScore;
-                } else {
-                    currentScore++;
-                    scoreText.innerText = currentScore;
-                }
-            }, 15);
+    <div class="card hidden" id="metaCard">
+      <div class="card-head">
+        <svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>
+        <h4>Meta informazioni</h4>
+      </div>
+      <div class="meta-box">
+        <p class="meta-cap">Meta description</p>
+        <p class="meta-desc" id="resDesc"></p>
+      </div>
+    </div>
+  </div>
 
-            const trustBadge = document.getElementById('trustBadge');
-            const verdictText = document.getElementById('verdictText');
-            trustBadge.innerText = data.trust_level === 'high' ? 'Affidabile' : (data.trust_level === 'medium' ? 'Attenzione' : 'Rischioso');
-            trustBadge.className = `px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 ${
-                data.trust_level === 'high' ? 'bg-emerald-500/20 text-emerald-400' : 
-                (data.trust_level === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400')
-            }`;
-            verdictText.innerText = data.verdict_text;
+  <footer>
+    <div class="grid grid-2" style="gap:2.5rem">
+      <div>
+        <h5><svg class="icon" aria-hidden="true"><use href="#i-help"/></svg> Guida ai risultati</h5>
+        <details>
+          <summary>Cos'è il Trust Score?
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg>
+          </summary>
+          <div>Un algoritmo che valuta HTTPS, header di sicurezza, reputazione dell'IP, segnalazioni di Google e età del dominio per stimare l'affidabilità complessiva.</div>
+        </details>
+        <details>
+          <summary>Perché conta l'età del dominio?
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg>
+          </summary>
+          <div>I siti usati per phishing o truffe girano quasi sempre su domini registrati da pochi giorni o settimane, perché vengono bruciati in fretta. Un dominio consolidato è generalmente più affidabile.</div>
+        </details>
+        <details>
+          <summary>Un punteggio alto significa che è sicuro?
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg>
+          </summary>
+          <div>No. Il punteggio riassume segnali tecnici, non garantisce l'onestà di chi gestisce il sito. Usalo come indizio, mai come unica prova: nel dubbio, non inserire dati personali o di pagamento.</div>
+        </details>
+      </div>
+      <div>
+        <h5><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg> Privacy</h5>
+        <p>Non memorizziamo gli indirizzi analizzati, non tracciamo le ricerche e non usiamo cookie di terze parti. Questa pagina non carica risorse da server esterni: caratteri e icone sono inclusi nella pagina stessa.</p>
+      </div>
+    </div>
 
-            document.getElementById('resDomain').innerText = data.domain;
-            document.getElementById('resTitle').innerText = data.meta?.title || "Sito Web";
-            document.getElementById('faviconImg').src = data.meta?.favicon || "";
-            
-            const statusBadge = document.getElementById('statusBadge');
-            statusBadge.innerText = `HTTP ${data.status}`;
-            statusBadge.className = `flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium ${
-                data.status < 400 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-            }`;
+    <div class="colophon">
+      <p>© 2018–2026 TivuStream Link Safety Tool</p>
+      <nav>
+        <a href="https://tivustream.com/">Home</a>
+        <a href="https://tivustream.com/privacy-policy/">Privacy</a>
+        <a href="https://tivustream.com/contatti/">Contatti</a>
+      </nav>
+    </div>
+  </footer>
+</div>
 
-            document.getElementById('resTime').innerText = `${data.responseTime}ms`;
-            document.getElementById('resServer').innerText = data.server || 'n/a';
-            document.getElementById('resCDN').innerText = data.cdn || 'No CDN';
-            
-            const sslEl = document.getElementById('resSSL');
-            if (data.https) {
-                const providerHtml = (data.ssl && data.ssl.provider && data.ssl.provider !== "n/a") ? `<br><span class="text-[9px] opacity-60">${data.ssl.provider}</span>` : "";
-                sslEl.innerHTML = `<span class="text-emerald-400 font-bold tracking-wide">ATTIVO</span><br><span class="text-[9px] opacity-60 italic">Protocollo TLS</span>${providerHtml}`;
-            } else {
-                sslEl.innerHTML = `<span class="text-rose-400 font-bold tracking-wide">NON ATTIVO</span>`;
-            }
+<script>
+"use strict";
 
-            document.getElementById('resIP').innerText = data.ip_info?.ip || 'n/a';
-            const rep = document.getElementById('resReputation');
-            rep.innerText = data.ip_reputation;
-            rep.className = `text-sm font-medium ${data.ip_reputation.includes('alta') ? 'text-rose-400' : (data.ip_reputation.includes('media') ? 'text-amber-400' : 'text-emerald-400')}`;
-            
-            const repNote = document.getElementById('resRepNote');
-            if (data.ip_reputation_note) {
-                repNote.innerText = data.ip_reputation_note;
-                repNote.classList.remove('hidden');
-            } else {
-                repNote.classList.add('hidden');
-            }
-            
-            const safe = document.getElementById('resSafeBrowsing');
-            safe.innerText = data.safe_browsing === 'clean' ? 'Pulito' : (data.safe_browsing === 'malicious' ? 'Malware!' : 'Sconosciuto');
-            safe.className = `text-sm font-medium ${data.safe_browsing === 'clean' ? 'text-emerald-400' : 'text-rose-400'}`;
-            document.getElementById('resHosting').innerText = data.ip_info?.hosting || 'n/a';
+const API = "https://tivustream-check-tool.tivustream.workers.dev/";
 
-            document.getElementById('resCreated').innerText = data.domain_created ? new Date(data.domain_created).toLocaleDateString() : 'n/a';
-            document.getElementById('resAge').innerText = data.domain_age || 'n/a';
-            document.getElementById('resUpdated').innerText = data.domain_updated ? new Date(data.domain_updated).toLocaleDateString() : 'n/a';
-            
-            const risk = document.getElementById('resRisk');
-            risk.innerText = data.domain_risk === 'high' ? 'Alto' : (data.domain_risk === 'medium' ? 'Medio' : 'Basso');
-            risk.className = `text-sm font-medium ${data.domain_risk === 'high' ? 'text-rose-400' : (data.domain_risk === 'medium' ? 'text-amber-400' : 'text-emerald-400')}`;
+const $ = (id) => document.getElementById(id);
 
-            const headerList = document.getElementById('headerList');
-            headerList.innerHTML = '';
-            const headers = [
-                { key: 'HSTS', val: data.security_headers.hsts, desc: 'Strict-Transport-Security' },
-                { key: 'CSP', val: data.security_headers.csp, desc: 'Content-Security-Policy' },
-                { key: 'X-Frame', val: data.security_headers.xframe, desc: 'X-Frame-Options' },
-                { key: 'X-Content', val: data.security_headers.xcontent, desc: 'X-Content-Type-Options' },
-                { key: 'Referrer', val: data.security_headers.referrer, desc: 'Referrer-Policy' }
-            ];
+/* Ogni stato ha colore, icona e parola. Il colore non viaggia mai da solo:
+   chi non distingue rosso e verde legge comunque l'icona e il testo. */
+const LEVELS = {
+  safe: { cls: "is-safe", icon: "#i-check", word: "Affidabile", color: "var(--good)" },
+  warn: { cls: "is-warn", icon: "#i-alert", word: "Attenzione", color: "var(--warn)" },
+  crit: { cls: "is-crit", icon: "#i-x",     word: "Rischioso",  color: "var(--crit)" }
+};
 
-            headers.forEach(h => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center p-3 bg-slate-900/40 rounded-xl border border-white/5";
-                div.innerHTML = `<div><p class="text-sm font-semibold text-white">${h.key}</p><p class="text-[10px] text-slate-500">${h.desc}</p></div><i data-lucide="${h.val ? 'check-circle' : 'alert-circle'}" class="w-5 h-5 ${h.val ? 'text-emerald-400' : 'text-slate-600'}"></i>`;
-                headerList.appendChild(div);
-            });
+const ADVICE = {
+  warn: "Alcuni controlli non sono convincenti. Evita di inserire password o dati di pagamento se non conosci già questo sito.",
+  crit: "Non inserire password, dati personali o di pagamento su questa pagina, e non scaricare file."
+};
 
-            const breakdownList = document.getElementById('breakdownList');
-            breakdownList.innerHTML = '';
-            data.trust_breakdown.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "flex items-center gap-2 py-1";
-                const isNegative = item.includes('❌');
-                const isWarning = item.includes('⚠');
-                div.innerHTML = `<span class="w-2 h-2 rounded-full ${isNegative ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')}"></span><span class="text-slate-300">${item.replace(/[❌✔⚠]/g, '').trim()}</span>`;
-                breakdownList.appendChild(div);
-            });
+function setIcon(el, href) {
+  el.innerHTML = '<use href="' + href + '"/>';
+}
 
-            if (data.meta?.description && data.meta.description !== "Non rilevata") {
-                document.getElementById('metaCard').classList.remove('hidden');
-                document.getElementById('resDesc').innerText = data.meta.description;
-            } else document.getElementById('metaCard').classList.add('hidden');
+function showNotice(message) {
+  $("noticeText").textContent = message;
+  $("notice").classList.remove("hidden");
+}
 
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                lucide.createIcons();
-            }
-            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+function hideNotice() {
+  $("notice").classList.add("hidden");
+}
 
-        document.getElementById('urlInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleScan();
-        });
-    </script>
+async function handleScan(event) {
+  if (event) event.preventDefault();
+
+  // L'input viene inviato integro: il percorso della pagina fa parte
+  // dell'analisi, perche' il phishing vive quasi sempre su un URL preciso
+  // dentro un dominio altrimenti legittimo.
+  const raw = $("urlInput").value.trim();
+
+  hideNotice();
+
+  if (!raw) {
+    showNotice("Inserisci un dominio o un link da analizzare.");
+    $("urlInput").focus();
+    return;
+  }
+
+  $("loading").classList.remove("hidden");
+  $("results").classList.add("hidden");
+  $("scanBtn").disabled = true;
+  $("btnText").textContent = "Analisi…";
+
+  let rendered = false;
+
+  try {
+    const response = await fetch(API + "?url=" + encodeURIComponent(raw));
+    const data = await response.json();
+
+    if (data.error) showNotice(data.error);
+    else { renderResults(data); rendered = true; }
+
+  } catch (err) {
+    showNotice("Non è stato possibile completare l'analisi. Controlla la connessione e riprova.");
+  } finally {
+    $("loading").classList.add("hidden");
+    $("scanBtn").disabled = false;
+    $("btnText").textContent = "Analizza";
+
+    // Lo scorrimento va calcolato DOPO aver tolto lo spinner: altrimenti
+    // la pagina si accorcia a salto gia' avviato e il verdetto finisce
+    // sopra il bordo dello schermo, che e' proprio cio' che l'utente
+    // deve vedere per primo.
+    if (rendered) {
+      requestAnimationFrame(() => {
+        $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
+}
+
+function levelFor(data) {
+  if (data.verdict === "danger") return LEVELS.crit;
+  if (data.verdict === "medium") return LEVELS.warn;
+  if (data.verdict === "safe")   return LEVELS.safe;
+  const s = data.trust_score || 0;
+  return s >= 80 ? LEVELS.safe : (s >= 50 ? LEVELS.warn : LEVELS.crit);
+}
+
+function renderResults(data) {
+
+  const level = levelFor(data);
+
+  /* --- Verdetto --- */
+  const verdict = $("verdict");
+  verdict.className = "verdict " + level.cls;
+  setIcon($("verdictIcon"), level.icon);
+  $("verdictLabel").textContent = level.word;
+  $("verdictText").textContent = (data.verdict_text || "").replace(/^[^\p{L}\d]+/u, "").trim();
+
+  const advice = $("verdictAdvice");
+  if (level === LEVELS.safe) {
+    advice.classList.add("hidden");
+  } else {
+    advice.textContent = level === LEVELS.crit ? ADVICE.crit : ADVICE.warn;
+    advice.classList.remove("hidden");
+  }
+
+  /* --- Punteggio ---
+     Il colore dell'anello arriva da una variabile CSS, non da una classe:
+     e' il punto in cui prima il codice assegnava classi inesistenti e
+     l'anello restava sempre dello stesso colore. */
+  const score = Number(data.trust_score) || 0;
+  const ring = $("scoreRing");
+  const circumference = 2 * Math.PI * 42;
+  ring.style.stroke = level.color;
+  ring.style.strokeDashoffset = circumference - (score / 100) * circumference;
+
+  const scoreText = $("scoreText");
+  let current = 0;
+  const step = setInterval(() => {
+    current += 2;
+    if (current >= score) { scoreText.textContent = score; clearInterval(step); }
+    else scoreText.textContent = current;
+  }, 16);
+
+  const badge = $("trustBadge");
+  badge.className = "badge " + level.cls;
+  setIcon($("badgeIcon"), level.icon);
+  $("badgeText").textContent = level.word;
+
+  /* --- Identita' del sito --- */
+  $("resDomain").textContent = data.domain || "—";
+  $("resTitle").textContent = (data.meta && data.meta.title) || "";
+
+  // Molti siti non hanno una favicon recuperabile: meglio nessuna immagine
+  // che il riquadro grigio dell'immagine rotta.
+  const favicon = $("faviconImg");
+  const faviconUrl = (data.meta && data.meta.favicon) || "";
+  favicon.alt = "";
+  favicon.onerror = () => favicon.classList.add("hidden");
+  if (faviconUrl) {
+    favicon.classList.remove("hidden");
+    favicon.src = faviconUrl;
+  } else {
+    favicon.classList.add("hidden");
+  }
+
+  // Se e' stata analizzata una pagina precisa, mostriamo quale:
+  // "sito.com" e "sito.com/login-verifica" non sono la stessa cosa.
+  const pathEl = $("resPath");
+  if (data.analyzed_path && data.url) {
+    let label = data.url;
+    try { const u = new URL(data.url); label = u.pathname + u.search; } catch (e) {}
+    pathEl.textContent = label;
+    pathEl.title = data.url;
+    pathEl.classList.remove("hidden");
+  } else {
+    pathEl.classList.add("hidden");
+  }
+
+  const statusBadge = $("statusBadge");
+  statusBadge.textContent = "HTTP " + (data.status != null ? data.status : "?");
+  statusBadge.className = "http-badge " + (data.status && data.status < 400 ? "ok" : "bad");
+
+  /* --- Riquadri --- */
+  $("resTime").textContent = data.responseTime != null ? data.responseTime + " ms" : "n/d";
+
+  // L'header "Server" puo' essere riscritto dall'infrastruttura che esegue
+  // l'analisi. Quando il motore lo segnala come inaffidabile ripieghiamo su
+  // X-Powered-By, che non subisce la stessa riscrittura — dicendolo.
+  const serverNote = $("resServerNote");
+  let serverLabel = valueOrNull(data.server);
+  if (data.server_reliable === false) {
+    serverLabel = valueOrNull(data.powered_by);
+    serverNote.textContent = "Header Server non attendibile";
+    serverNote.classList.remove("hidden");
+  } else {
+    serverNote.classList.add("hidden");
+  }
+  $("resServer").textContent = serverLabel || "n/d";
+
+  $("resCDN").textContent = data.cdn || "n/d";
+
+  const ssl = $("resSSL");
+  const sslSub = $("resSSLSub");
+  if (data.https) {
+    ssl.textContent = "HTTPS attivo";
+    ssl.className = "tile-val t-good";
+    const provider = data.ssl && valueOrNull(data.ssl.provider);
+    sslSub.textContent = provider || "";
+  } else {
+    ssl.textContent = "Non protetto";
+    ssl.className = "tile-val t-crit";
+    sslSub.textContent = "Il traffico viaggia in chiaro";
+  }
+
+  /* --- Rete e reputazione --- */
+  $("resIP").textContent = (data.ip_info && data.ip_info.ip) || "n/d";
+
+  const rep = $("resReputation");
+  const repMap = {
+    "bassa": ["Bassa", "t-good"],
+    "media": ["Media", "t-warn"],
+    "alta (rischio elevato)": ["Alta", "t-crit"]
+  };
+  const repEntry = repMap[data.ip_reputation];
+  rep.textContent = repEntry ? repEntry[0] : "Non disponibile";
+  rep.className = repEntry ? repEntry[1] : "t-mute";
+
+  const repNote = $("resRepNote");
+  if (data.ip_reputation_note) {
+    repNote.textContent = data.ip_reputation_note;
+    repNote.classList.remove("hidden");
+  } else {
+    repNote.classList.add("hidden");
+  }
+
+  const safe = $("resSafeBrowsing");
+  if (data.safe_browsing === "clean")           { safe.textContent = "Nessuna segnalazione"; safe.className = "t-good"; }
+  else if (data.safe_browsing === "malicious")  { safe.textContent = "Segnalato";            safe.className = "t-crit"; }
+  else                                          { safe.textContent = "Non disponibile";      safe.className = "t-mute"; }
+
+  $("resHosting").textContent = (data.ip_info && data.ip_info.hosting) || "n/d";
+
+  /* --- Dominio --- */
+  $("resCreated").textContent = formatDate(data.domain_created);
+  $("resAge").textContent     = data.domain_age_days != null ? data.domain_age_days + " giorni" : "Non disponibile";
+  $("resUpdated").textContent = formatDate(data.domain_updated);
+
+  const risk = $("resRisk");
+  const riskMap = { high: ["Alto", "t-crit"], medium: ["Medio", "t-warn"], low: ["Basso", "t-good"] };
+  const riskEntry = riskMap[data.domain_risk];
+  risk.textContent = riskEntry ? riskEntry[0] : "Non disponibile";
+  risk.className = riskEntry ? riskEntry[1] : "t-mute";
+
+  /* --- Header di sicurezza --- */
+  const headerList = $("headerList");
+  headerList.textContent = "";
+  const sh = data.security_headers || {};
+  [
+    ["HSTS",      "Strict-Transport-Security", sh.hsts],
+    ["CSP",       "Content-Security-Policy",   sh.csp],
+    ["X-Frame",   "X-Frame-Options",           sh.xframe],
+    ["X-Content", "X-Content-Type-Options",    sh.xcontent],
+    ["Referrer",  "Referrer-Policy",           sh.referrer]
+  ].forEach(([name, desc, present]) => {
+    const item = document.createElement("div");
+    item.className = "hdr-item";
+
+    const left = document.createElement("div");
+    const n = document.createElement("p"); n.className = "hdr-name"; n.textContent = name;
+    const d = document.createElement("p"); d.className = "hdr-desc"; d.textContent = desc;
+    left.append(n, d);
+
+    // Stato con icona E parola: non affidiamo il significato al solo colore.
+    const state = document.createElement("span");
+    state.className = "hdr-state " + (present ? "t-good" : "t-mute");
+    state.innerHTML = '<svg class="icon" aria-hidden="true"><use href="'
+      + (present ? "#i-check" : "#i-minus") + '"/></svg>';
+    const w = document.createElement("span");
+    w.textContent = present ? "Presente" : "Assente";
+    state.append(w);
+
+    item.append(left, state);
+    headerList.append(item);
+  });
+
+  /* --- Analisi dettagliata --- */
+  const bd = $("breakdownList");
+  bd.textContent = "";
+  (data.trust_breakdown || []).forEach(entry => {
+    const negative = entry.includes("❌");
+    const warning  = entry.includes("⚠");
+    const item = document.createElement("div");
+    item.className = "bd-item " + (negative ? "t-crit" : warning ? "t-warn" : "t-good");
+    item.innerHTML = '<svg class="icon" aria-hidden="true"><use href="'
+      + (negative ? "#i-x" : warning ? "#i-alert" : "#i-check") + '"/></svg>';
+    const text = document.createElement("span");
+    text.style.color = "var(--text-2)";
+    text.textContent = entry.replace(/[❌✔⚠]/g, "").trim();
+    item.append(text);
+    bd.append(item);
+  });
+
+  /* --- Meta --- */
+  const desc = data.meta && data.meta.description;
+  if (desc && desc !== "Non rilevata") {
+    $("resDesc").textContent = desc;
+    $("metaCard").classList.remove("hidden");
+  } else {
+    $("metaCard").classList.add("hidden");
+  }
+
+  $("results").classList.remove("hidden");
+}
+
+function valueOrNull(v) {
+  if (!v || v === "n/a" || v === "n/d" || v === "Non rilevato") return null;
+  return v;
+}
+
+function formatDate(value) {
+  if (!value) return "Non disponibile";
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? "Non disponibile" : d.toLocaleDateString("it-IT");
+}
+
+$("scanForm").addEventListener("submit", handleScan);
+</script>
 </body>
 </html>

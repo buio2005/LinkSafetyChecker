@@ -1,3 +1,82 @@
+/**
+ * Legge quello che l'utente ha digitato e ne ricava i pezzi che servono ai controlli.
+ * Accetta "example.com", "example.com/pagina", "https://example.com/pagina?a=1".
+ * Restituisce null se l'input non e' leggibile come indirizzo web.
+ */
+function parseTarget(raw) {
+
+  let input = String(raw).trim()
+  if (!input) return null
+
+  // Aggiunge lo schema solo se non c'e' gia'.
+  // L'espressione e' ancorata all'inizio e richiede "://" di proposito:
+  // un dominio come "httpbin.org" inizia per "http" ma NON ha uno schema.
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(input)) {
+    input = "https://" + input
+  }
+
+  let url
+  try {
+    url = new URL(input)
+  } catch (e) {
+    return null
+  }
+
+  // Solo indirizzi web: blocca javascript:, data:, file:, ftp: ...
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null
+
+  const hostname = url.hostname.toLowerCase()
+
+  // Un hostname valido contiene solo lettere, cifre, trattini e punti.
+  // I domini internazionali (es. "münchen.de") arrivano qui gia' convertiti
+  // in punycode da new URL(), quindi rientrano nella regola.
+  // Questo respinge input come "esempio.com&limit=999", che il parser di URL
+  // accetterebbe come nome host pur non essendolo.
+  if (!/^[a-z0-9.-]+$/.test(hostname)) return null
+  if (!hostname.includes(".")) return null
+  if (/^[.-]|[.-]$|\.\./.test(hostname)) return null
+
+  return {
+    // Indirizzo completo e normalizzato: e' quello che va scaricato
+    // e che va passato a Google Safe Browsing.
+    urlToCheck: url.toString(),
+    // Solo il nome host: serve a DNS, certificati e favicon.
+    hostname,
+    // Candidati per RDAP, dal piu' probabile al meno probabile.
+    domainCandidates: domainCandidates(hostname),
+    // Vero se l'utente ha indicato una pagina precisa e non solo un dominio.
+    hasPath: url.pathname !== "/" || url.search !== ""
+  }
+}
+
+/**
+ * RDAP vuole il dominio registrato, non il nome host completo:
+ * "www.bbc.co.uk" e' registrato come "bbc.co.uk", "blog.example.com" come "example.com".
+ * Distinguerli con certezza richiederebbe la Public Suffix List; qui restituiamo
+ * i candidati plausibili in ordine e lasciamo che sia chi interroga a provarli.
+ * Costa poco ed e' sbagliato solo con suffissi esotici.
+ */
+function domainCandidates(hostname) {
+
+  const parts = hostname.split(".").filter(Boolean)
+  if (parts.length < 2) return [hostname]
+
+  const twoLabel = parts.slice(-2).join(".")
+  const threeLabel = parts.length >= 3 ? parts.slice(-3).join(".") : null
+
+  // Suffissi composti come "co.uk", "com.au", "co.jp": le ultime due etichette
+  // sono entrambe corte. In quei casi il dominio registrato ne ha tre, e
+  // conviene provare quello per primo — altrimenti rischiamo di leggere
+  // l'eta' di "co.uk" e attribuirla al sito.
+  const looksCompound = parts.slice(-2).every(p => p.length <= 3)
+
+  const ordered = (looksCompound && threeLabel)
+    ? [threeLabel, twoLabel]
+    : [twoLabel, threeLabel]
+
+  return ordered.filter(Boolean)
+}
+
 export default {
   async fetch(request, env) {
 
@@ -13,22 +92,30 @@ export default {
     }
 
     const { searchParams } = new URL(request.url)
-    let target = searchParams.get("url")
+    const rawInput = searchParams.get("url")
 
-    if (!target) {
+    if (!rawInput) {
       return new Response(JSON.stringify({
-        error: "Inserisci un dominio"
-      }), { headers })
+        error: "Inserisci un dominio o un link"
+      }), { headers, status: 400 })
     }
+
+    const parsed = parseTarget(rawInput)
+
+    if (!parsed) {
+      return new Response(JSON.stringify({
+        error: "Indirizzo non valido"
+      }), { headers, status: 400 })
+    }
+
+    const { urlToCheck, hostname, domainCandidates, hasPath } = parsed
+
+    // "target" resta il nome host: e' cio' che vogliono DNS, certificati e favicon.
+    const target = hostname
 
     let result = {}
 
     try {
-
-      let urlToCheck = target
-      if (!urlToCheck.startsWith("http")) {
-        urlToCheck = "https://" + urlToCheck
-      }
 
       const startTime = Date.now()
       const response = await fetch(urlToCheck, {
@@ -43,17 +130,22 @@ export default {
       const h = Object.fromEntries(response.headers)
       const finalUrl = response.url
 
-      result.domain = target
+      result.input = rawInput          // cio' che l'utente ha digitato
+      result.domain = target           // solo il nome host
+      result.url = urlToCheck          // indirizzo completo analizzato
+      result.analyzed_path = hasPath   // true se e' stata analizzata una pagina precisa
       result.status = response.status
       result.https = finalUrl.startsWith("https")
       result.responseTime = responseTime
+      // urlToCheck e' ora normalizzato (con la barra finale), quindi il confronto
+      // non segnala piu' un redirect inesistente per "sito.com" -> "sito.com/".
       result.redirected = finalUrl !== urlToCheck
       result.finalUrl = finalUrl
 
       // Basic HTML parsing (regex is limited but enough for title/meta)
       let title = "Non rilevato"
       let description = "Non rilevata"
-      let favicon = `https://www.google.com/s2/favicons?domain=${target}&sz=64`
+      let favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(target)}&sz=64`
 
       if (response.headers.get("content-type")?.includes("text/html")) {
         const text = await response.text()
@@ -71,18 +163,19 @@ export default {
         favicon
       }
 
-      // --- CDN Detection (PHASE 1: Headers hint) ---
+      // --- CDN Detection (FASE 1: indizi dagli header) ---
       let headerCdn = null
-      let server = h["server"] ? h["server"].toLowerCase() : "n/a"
-      
-      // Cloudflare Worker Proxy Fix: 
-      // Cloudflare Workers often overwrite the 'Server' header to 'cloudflare' during fetch.
-      // We also check for 'x-powered-by' or other clues if server is 'cloudflare'
-      if (server === "cloudflare") {
-        if (h["x-powered-by"]) server = h["x-powered-by"].toLowerCase()
-        else if (h["x-turbo-charged-by"]) server = "litespeed"
-      }
+
+      // Due informazioni diverse, tenute separate invece che sovrascritte.
+      // "server" = il software che serve il sito (Apache, nginx, ATS...)
+      // "powered_by" = lo stack applicativo (PHP, ASP.NET, LiteSpeed...)
+      const server = h["server"] ? h["server"].toLowerCase() : "n/a"
+      const poweredBy = h["x-powered-by"]
+        ? h["x-powered-by"].toLowerCase()
+        : (h["x-turbo-charged-by"] ? "litespeed" : "n/a")
+
       result.server = server
+      result.powered_by = poweredBy
 
       const hasCfRay = !!h["cf-ray"]
       const hasCfCache = !!h["cf-cache-status"]
@@ -113,7 +206,7 @@ export default {
       let ssl_info = { valid: result.https, provider: "n/a" }
       try {
         // We only try a quick lookup for issuer to avoid "n/a" if possible
-        const ct_res = await fetch(`https://api.certspotter.com/v1/issuances?domain=${target}&include_subdomains=false&limit=1`)
+        const ct_res = await fetch(`https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(target)}&include_subdomains=false&limit=1`)
         const ct_data = await ct_res.json()
         if (ct_data && ct_data.length > 0) {
           ssl_info.provider = ct_data[0].issuer?.common_name || "n/a"
@@ -127,7 +220,7 @@ export default {
       let ip_info = {}
 
       try {
-        const dns = await fetch("https://dns.google/resolve?name=" + target)
+        const dns = await fetch("https://dns.google/resolve?name=" + encodeURIComponent(target))
         const dns_data = await dns.json()
 
         if (dns_data.Answer) {
@@ -135,7 +228,7 @@ export default {
           const ip = dns_data.Answer[0].data
           ip_info.ip = ip
 
-          const iplookup = await fetch("http://ip-api.com/json/" + ip)
+          const iplookup = await fetch("http://ip-api.com/json/" + encodeURIComponent(ip))
           const ipdata = await iplookup.json()
 
           ip_info.country = ipdata.country || "n/a"
@@ -197,6 +290,12 @@ if (finalCdn === "No CDN rilevata" && headerCdn) {
 }
 
 result.cdn = finalCdn
+
+// L'infrastruttura che esegue l'analisi puo' riscrivere l'header "Server"
+// delle risposte in uscita. Se leggiamo "cloudflare" ma il sito, in base
+// all'ASN, NON e' su Cloudflare, il valore parla di noi e non del sito:
+// lo segnaliamo invece di spacciarlo per un dato affidabile.
+result.server_reliable = !(result.server === "cloudflare" && finalCdn !== "Cloudflare")
 
       // IP reputation
       let ip_reputation = "unknown"
@@ -282,6 +381,7 @@ result.cdn = finalCdn
 let domain_created = null
 let domain_updated = null
 let age_days = null
+let domain_queried = null
 
 async function getDomainInfo(domain){
 
@@ -294,7 +394,8 @@ async function getDomainInfo(domain){
 
     try {
 
-      const res = await fetch(base + domain)
+      const res = await fetch(base + encodeURIComponent(domain))
+      if (!res.ok) continue
       const data = await res.json()
 
       // 1️⃣ EVENTI STANDARD
@@ -340,14 +441,24 @@ async function getDomainInfo(domain){
 
 }
 
-await getDomainInfo(target)
+// RDAP vuole il dominio registrato, non il nome host completo.
+// Proviamo i candidati in ordine: "example.com" prima, "bbc.co.uk" poi.
+for (const candidate of domainCandidates) {
+  await getDomainInfo(candidate)
+  if (domain_created) {
+    domain_queried = candidate
+    break
+  }
+}
 
 // 🌐 FALLBACK SE RDAP NON RESTITUISCE NULLA
 if (!domain_created) {
 
+  const fallbackDomain = domainCandidates[0] || target
+
   try {
 
-    const alt = await fetch("https://api.whois.vu/?q=" + target)
+    const alt = await fetch("https://api.whois.vu/?q=" + encodeURIComponent(fallbackDomain))
     const alt_data = await alt.json()
 
     // prova vari formati possibili
@@ -356,6 +467,8 @@ if (!domain_created) {
     } else if (alt_data.creation_date) {
       domain_created = alt_data.creation_date
     }
+
+    if (domain_created) domain_queried = fallbackDomain
 
   } catch(e) {}
 
@@ -373,11 +486,21 @@ if (domain_created) {
   }
 
   let createdDate = new Date(domain_created)
-  let now = new Date()
-  age_days = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24))
+
+  if (isNaN(createdDate.getTime())) {
+    // Data illeggibile: meglio nessun dato che un dato inventato.
+    domain_created = null
+  } else {
+    // Le fonti restituiscono formati diversi (ISO, timestamp UNIX...).
+    // Normalizziamo sempre in ISO, cosi' chi legge trova un formato solo.
+    domain_created = createdDate.toISOString()
+    let now = new Date()
+    age_days = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24))
+  }
 }
 
 result.domain_created = domain_created
+result.domain_queried = domain_queried
 result.domain_updated = domain_updated
 result.domain_age_days = age_days
 result.domain_age = age_days ? age_days + " giorni" : "non disponibile"
