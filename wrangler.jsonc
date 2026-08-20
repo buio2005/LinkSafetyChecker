@@ -1,0 +1,42 @@
+{
+  // Script name on Cloudflare. Keep it as "tivustream-check-tool":
+  // this is the existing Worker, renaming it would create a new empty one.
+  "name": "tivustream-check-tool",
+
+  // Worker entry point.
+  "main": "src/worker.js",
+
+  // Cloudflare API baseline date. Freezing it guarantees the runtime
+  // behaviour will not shift under our feet.
+  "compatibility_date": "2026-03-16",
+
+  // Exposes the public *.workers.dev address.
+  // TODO (phase 0): set to false once the Worker is served from a
+  // tivustream.com route, so the direct endpoint is no longer reachable.
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Invocation logs and metrics, already enabled on the deployed Worker.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  }
+
+  // ABOUT SECRETS
+  // ABUSEIPDB_KEY and GOOGLE_SAFEBROWSING_KEY are deliberately absent here.
+  // They are encrypted secrets on Cloudflare, set with:
+  //   npx wrangler secret put ABUSEIPDB_KEY
+  //   npx wrangler secret put GOOGLE_SAFEBROWSING_KEY
+  // Locally (wrangler dev) they are read from .dev.vars, which git ignores.
+}

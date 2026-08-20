@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Wrangler (local cache, build output, wrangler dev state)
+.wrangler/
+dist/
+
+# SECRETS - these must NEVER reach the repository
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,15 @@
+{
+  "name": "tivustream-check-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Link Safety Checker - security analysis for links and domains",
+  "scripts": {
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.124.0"
+  }
+}

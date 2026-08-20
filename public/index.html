@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Safety Checker | Analisi Sicurezza Web</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
+
+        .container { width: 100%; }
+        .min-h-screen { min-height: 100vh; }
+        .hidden { display: none !important; }
+        .inline-block { display: inline-block; }
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .inset-0 { inset: 0; }
+        .inset-y-0 { top: 0; bottom: 0; }
+        .left-4 { left: 1rem; }
+        .w-full { width: 100%; }
+        .w-2 { width: .5rem; }
+        .w-4 { width: 1rem; }
+        .w-5 { width: 1.25rem; }
+        .w-12 { width: 3rem; }
+        .w-32 { width: 8rem; }
+        .h-2 { height: .5rem; }
+        .h-4 { height: 1rem; }
+        .h-5 { height: 1.25rem; }
+        .h-12 { height: 3rem; }
+        .h-32 { height: 8rem; }
+        .h-auto { height: auto; }
+        .h-full { height: 100%; }
+        .max-w-4xl { max-width: 56rem; }
+        .max-w-xl { max-width: 36rem; }
+        .max-w-\[200px\] { max-width: 200px; }
+        .max-w-\[220px\] { max-width: 220px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mb-1 { margin-bottom: .25rem; }
+        .mb-2 { margin-bottom: .5rem; }
+        .mb-3 { margin-bottom: .75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .mt-1 { margin-top: .25rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mt-20 { margin-top: 5rem; }
+        .ml-4 { margin-left: 1rem; }
+        .p-2 { padding: .5rem; }
+        .p-3 { padding: .75rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .px-3 { padding-left: .75rem; padding-right: .75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-8 { padding-left: 2rem; padding-right: 2rem; }
+        .py-1 { padding-top: .25rem; padding-bottom: .25rem; }
+        .py-2 { padding-top: .5rem; padding-bottom: .5rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+        .pb-12 { padding-bottom: 3rem; }
+        .pt-12 { padding-top: 3rem; }
+        .pl-12 { padding-left: 3rem; }
+        .pr-4 { padding-right: 1rem; }
+        .gap-2 { gap: .5rem; }
+        .gap-3 { gap: .75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-12 { gap: 3rem; }
+        .space-y-2 > * + * { margin-top: .5rem; }
+        .space-y-3 > * + * { margin-top: .75rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .space-y-6 > * + * { margin-top: 1.5rem; }
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .rounded-full { border-radius: 9999px; }
+        .rounded-lg { border-radius: .5rem; }
+        .rounded-xl { border-radius: .75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-3xl { border-radius: 1.5rem; }
+        .border { border-width: 1px; border-style: solid; }
+        .border-4 { border-width: 4px; border-style: solid; }
+        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+        .border-t { border-top-width: 1px; border-top-style: solid; }
+        .border-none { border: none; }
+        .border-transparent { border-color: transparent; }
+        .border-white\/5 { border-color: rgba(255,255,255,.05); }
+        .border-indigo-500 { border-color: #6366f1; }
+        .border-t-transparent { border-top-color: transparent; }
+        .border-slate-700 { border-color: #334155; }
+        .bg-transparent { background-color: transparent; }
+        .bg-emerald-500\/10 { background-color: rgba(16,185,129,.1); }
+        .bg-emerald-500\/20 { background-color: rgba(16,185,129,.2); }
+        .bg-amber-500 { background-color: #f59e0b; }
+        .bg-amber-500\/20 { background-color: rgba(245,158,11,.2); }
+        .bg-indigo-600 { background-color: #4f46e5; }
+        .bg-rose-500 { background-color: #f43f5e; }
+        .bg-rose-500\/10 { background-color: rgba(244,63,94,.1); }
+        .bg-rose-500\/20 { background-color: rgba(244,63,94,.2); }
+        .bg-slate-800 { background-color: #1e293b; }
+        .bg-slate-800\/10 { background-color: rgba(30,41,59,.1); }
+        .bg-slate-800\/30 { background-color: rgba(30,41,59,.3); }
+        .bg-slate-800\/40 { background-color: rgba(30,41,59,.4); }
+        .bg-slate-800\/50 { background-color: rgba(30,41,59,.5); }
+        .bg-slate-900\/50 { background-color: rgba(15,23,42,.5); }
+        .text-white { color: #fff; }
+        .text-slate-200 { color: #e2e8f0; }
+        .text-slate-300 { color: #cbd5e1; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-600 { color: #475569; }
+        .text-slate-800 { color: #1e293b; }
+        .text-indigo-400 { color: #818cf8; }
+        .text-indigo-500 { color: #6366f1; }
+        .text-emerald-400 { color: #34d399; }
+        .text-amber-400 { color: #fbbf24; }
+        .text-rose-400 { color: #fb7185; }
+        .placeholder-slate-500::placeholder { color: #64748b; }
+        .text-\[9px\] { font-size: 9px; }
+        .text-\[10px\] { font-size: 10px; }
+        .text-xs { font-size: .75rem; }
+        .text-sm { font-size: .875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .italic { font-style: italic; }
+        .uppercase { text-transform: uppercase; }
+        .leading-tight { line-height: 1.25; }
+        .leading-relaxed { line-height: 1.625; }
+        .tracking-tight { letter-spacing: -.025em; }
+        .tracking-wide { letter-spacing: .025em; }
+        .tracking-wider { letter-spacing: .05em; }
+        .tracking-widest { letter-spacing: .1em; }
+        .truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .opacity-60 { opacity: .6; }
+        .cursor-pointer { cursor: pointer; }
+        .pointer-events-none { pointer-events: none; }
+        .list-none { list-style: none; }
+        .outline-none { outline: none; }
+        .focus\:ring-0:focus { box-shadow: none; outline: none; }
+        .transition-all { transition: all .2s ease; }
+        .transition-colors { transition: color .2s ease, background-color .2s ease, border-color .2s ease; }
+        .transition-transform { transition: transform .2s ease; }
+        .duration-1000 { transition-duration: 1s; }
+        .duration-200 { transition-duration: .2s; }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,.3), 0 4px 6px -4px rgba(0,0,0,.3); }
+        .shadow-indigo-500\/20 { box-shadow: 0 10px 30px rgba(99,102,241,.2); }
+        .drop-shadow-xl { filter: drop-shadow(0 20px 15px rgba(0,0,0,.35)); }
+        .animate-spin { animation: lsc-spin 1s linear infinite; }
+        .hover\:bg-indigo-500:hover { background-color: #6366f1; }
+        .hover\:bg-slate-800\/50:hover { background-color: rgba(30,41,59,.5); }
+        .hover\:text-white:hover { color: #fff; }
+        .active\:scale-95:active { transform: scale(.95); }
+
+        details.group[open] .group-open\:rotate-180 { transform: rotate(180deg); }
+
+        @media (min-width: 768px) {
+            .md\:flex-row { flex-direction: row; }
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .md\:col-span-2 { grid-column: span 2 / span 2; }
+            .md\:max-auto { max-width: none; }
+        }
+
+        @keyframes lsc-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen pb-12">
+
+    <div class="container mx-auto px-4 max-w-4xl pt-12">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <div class="flex justify-center mb-6">
+                <img src="logo.png" alt="TivuStream Logo" class="max-w-[220px] h-auto drop-shadow-xl opacity-95">
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-3 tracking-tight">Link Safety Checker</h1>
+            <p class="text-slate-400 max-w-xl mx-auto text-lg">
+                Analisi istantanea di sicurezza, reputazione e affidabilità per qualsiasi sito web.
+            </p>
+        </header>
+
+        <!-- Search Input -->
+        <div class="glass rounded-3xl p-2 mb-8 flex flex-col md:flex-row gap-2 shadow-2xl">
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <i data-lucide="globe" class="w-5 h-5 text-slate-500"></i>
+                </div>
+                <input type="text" id="urlInput" 
+                    placeholder="Inserisci un dominio (es. google.com)" 
+                    class="w-full bg-transparent border-none py-4 pl-12 pr-4 focus:ring-0 text-white placeholder-slate-500 text-lg outline-none">
+            </div>
+            <button onclick="handleScan()" id="scanBtn"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-indigo-500/20">
+                <span id="btnText">Analizza Ora</span>
+                <i data-lucide="arrow-right" class="w-5 h-5" id="btnIcon"></i>
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center py-20">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+            <p class="text-slate-400 animate-pulse-soft">Analisi profonda in corso...</p>
+        </div>
+
+        <!-- Results Area -->
+        <div id="results" class="hidden space-y-6">
+            <!-- Score & Quick Info -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Trust Score Ring -->
+                <div class="glass rounded-3xl p-6 flex flex-col items-center justify-center text-center">
+                    <div class="relative w-32 h-32 mb-4">
+                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                            <circle class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50"/>
+                            <circle id="scoreRing" class="text-indigo-500 transition-all duration-1000" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col">
+                            <span id="scoreText" class="text-3xl font-bold text-white">0</span>
+                            <span class="text-[10px] uppercase tracking-widest text-slate-500">Score</span>
+                        </div>
+                    </div>
+                    <div id="trustBadge" class="px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-2"></div>
+                    <p id="verdictText" class="text-sm font-medium text-slate-300"></p>
+                </div>
+
+                <!-- Domain Info Card -->
+                <div class="glass rounded-3xl p-6 md:col-span-2">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-4">
+                            <img id="faviconImg" src="" alt="" class="w-12 h-12 rounded-xl bg-slate-800 p-2 border border-slate-700">
+                            <div>
+                                <h3 id="resDomain" class="text-xl font-bold text-white leading-tight"></h3>
+                                <p id="resTitle" class="text-slate-400 text-sm truncate max-w-[200px] md:max-auto"></p>
+                            </div>
+                        </div>
+                        <div id="statusBadge" class="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
+                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Risposta</p>
+                            <p id="resTime" class="text-sm font-semibold text-white"></p>
+                        </div>
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
+                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Server</p>
+                            <p id="resServer" class="text-sm font-semibold text-white truncate"></p>
+                        </div>
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
+                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">CDN</p>
+                            <p id="resCDN" class="text-sm font-semibold text-white"></p>
+                        </div>
+                        <div class="bg-slate-800/40 p-3 rounded-2xl border border-white/5">
+                            <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1">SSL Cert</p>
+                            <p id="resSSL" class="text-xs font-semibold text-white leading-tight"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Tabs/Grids -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Security Headers -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="lock" class="w-5 h-5 text-indigo-400"></i>
+                        <h4 class="font-bold text-white">Security Headers</h4>
+                    </div>
+                    <div id="headerList" class="space-y-3">
+                        <!-- Headers populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Network & IP -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="activity" class="w-5 h-5 text-indigo-400"></i>
+                        <h4 class="font-bold text-white">Network & Reputation</h4>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">IP Address</span>
+                            <span id="resIP" class="text-sm font-mono font-medium text-white"></span>
+                        </div>
+                        <div class="flex flex-col py-2 border-b border-white/5">
+                            <div class="flex justify-between items-center w-full">
+                                <span class="text-sm text-slate-400">IP Reputation</span>
+                                <span id="resReputation" class="text-sm font-medium"></span>
+                            </div>
+                            <p id="resRepNote" class="text-[10px] text-slate-500 mt-1 hidden italic"></p>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Safe Browsing</span>
+                            <span id="resSafeBrowsing" class="text-sm font-medium"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Hosting</span>
+                            <span id="resHosting" class="text-sm font-medium text-white truncate ml-4 text-right"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Domain Age & Risk -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="calendar" class="w-5 h-5 text-indigo-400"></i>
+                        <h4 class="font-bold text-white">Domain Intelligence</h4>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Creato il</span>
+                            <span id="resCreated" class="text-sm font-medium text-white"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Età Dominio</span>
+                            <span id="resAge" class="text-sm font-medium text-white"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Rischio Dominio</span>
+                            <span id="resRisk" class="text-sm font-medium"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-sm text-slate-400">Ultimo Aggiornamento</span>
+                            <span id="resUpdated" class="text-sm font-medium text-white"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Breakdown -->
+                <div class="glass rounded-3xl p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="list-checks" class="w-5 h-5 text-indigo-400"></i>
+                        <h4 class="font-bold text-white">Analisi Dettagliata</h4>
+                    </div>
+                    <div id="breakdownList" class="space-y-2 text-xs">
+                        <!-- Breakdown populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meta Info -->
+            <div id="metaCard" class="glass rounded-3xl p-6 hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
+                    <h4 class="font-bold text-white">Meta Informazioni</h4>
+                </div>
+                <div class="bg-slate-900/50 p-4 rounded-2xl border border-white/5">
+                    <p class="text-xs text-slate-500 uppercase tracking-widest mb-2">Meta Description</p>
+                    <p id="resDesc" class="text-sm text-slate-300 italic"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ / Footer -->
+        <footer class="mt-20 border-t border-white/5 pt-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div>
+                    <h5 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="help-circle" class="w-4 h-4 text-indigo-400"></i>
+                        Guida ai risultati
+                    </h5>
+                    <div class="space-y-4 text-sm text-slate-400">
+                        <details class="group">
+                            <summary class="cursor-pointer list-none flex justify-between items-center p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors">
+                                <span>Cos'è il Trust Score?</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-4 bg-slate-800/10 rounded-xl mt-1">
+                                Un algoritmo che valuta HTTPS, header di sicurezza, reputazione IP, segnalazioni di Google e l'età del dominio per determinare l'affidabilità complessiva.
+                            </div>
+                        </details>
+                        <details class="group">
+                            <summary class="cursor-pointer list-none flex justify-between items-center p-3 bg-slate-800/30 rounded-xl hover:bg-slate-800/50 transition-colors">
+                                <span>Perché l'età del dominio è importante?</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-4 bg-slate-800/10 rounded-xl mt-1">
+                                I siti usati per phishing o truffe spesso usano domini registrati da pochissimi giorni o settimane. Un dominio "vecchio" è generalmente più affidabile.
+                            </div>
+                        </details>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-white font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="shield" class="w-4 h-4 text-indigo-400"></i>
+                        Privacy & Sicurezza
+                    </h5>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Questo strumento è progettato per la trasparenza. Non memorizziamo i dati analizzati, non tracciamo le tue ricerche e non installiamo cookie di terze parti. Tutte le analisi avvengono in tempo reale tramite Cloudflare Workers.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center text-slate-500 text-xs">
+                <p class="mb-4">© 2018 - 2026 TivuStream Link Safety Tool. Tutti i diritti riservati.</p>
+                <div class="flex justify-center gap-6">
+                    <a href="https://tivustream.com/" class="hover:text-white transition-colors">Home</a>
+                    <a href="https://tivustream.com/privacy-policy/" class="hover:text-white transition-colors">Privacy</a>
+                    <a href="https://tivustream.com/contatti/" class="hover:text-white transition-colors">Contatti</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
+        }
+
+        async function handleScan() {
+            const urlInput = document.getElementById('urlInput');
+            const scanBtn = document.getElementById('scanBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+
+            let domain = urlInput.value.trim();
+            domain = domain.replace(/^https?:\/\//, "").split('/')[0];
+
+            if (!domain) {
+                alert("Per favore inserisci un dominio valido.");
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            scanBtn.disabled = true;
+            btnText.innerText = "Analizzando...";
+            btnIcon.outerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin" id="btnIcon"></i>';
+            lucide.createIcons();
+
+            try {
+                const response = await fetch(`https://tivustream-check-tool.tivustream.workers.dev/?url=${domain}`);
+                const data = await response.json();
+                if (data.error) alert(data.error);
+                else renderResults(data);
+            } catch (error) {
+                console.error(error);
+                alert("Si è verificato un errore durante l'analisi. Riprova.");
+            } finally {
+                loading.classList.add('hidden');
+                scanBtn.disabled = false;
+                btnText.innerText = "Analizza Ora";
+                const currentIcon = document.getElementById('btnIcon');
+                currentIcon.outerHTML = '<i data-lucide="arrow-right" class="w-5 h-5" id="btnIcon"></i>';
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        function renderResults(data) {
+            const results = document.getElementById('results');
+            results.classList.remove('hidden');
+            document.getElementById('loading').classList.add('hidden');
+
+            const scoreRing = document.getElementById('scoreRing');
+            const scoreText = document.getElementById('scoreText');
+            const targetScore = data.trust_score || 0;
+            const circumference = 2 * Math.PI * 42;
+            const offset = circumference - (targetScore / 100) * circumference;
+            scoreRing.style.strokeDashoffset = offset;
+            
+            if (targetScore >= 80) scoreRing.className = "text-emerald-500 transition-all duration-1000";
+            else if (targetScore >= 50) scoreRing.className = "text-amber-500 transition-all duration-1000";
+            else scoreRing.className = "text-rose-500 transition-all duration-1000";
+
+            let currentScore = 0;
+            const scoreInterval = setInterval(() => {
+                if (currentScore >= targetScore) {
+                    clearInterval(scoreInterval);
+                    scoreText.innerText = targetScore;
+                } else {
+                    currentScore++;
+                    scoreText.innerText = currentScore;
+                }
+            }, 15);
+
+            const trustBadge = document.getElementById('trustBadge');
+            const verdictText = document.getElementById('verdictText');
+            trustBadge.innerText = data.trust_level === 'high' ? 'Affidabile' : (data.trust_level === 'medium' ? 'Attenzione' : 'Rischioso');
+            trustBadge.className = `px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-2 ${
+                data.trust_level === 'high' ? 'bg-emerald-500/20 text-emerald-400' : 
+                (data.trust_level === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400')
+            }`;
+            verdictText.innerText = data.verdict_text;
+
+            document.getElementById('resDomain').innerText = data.domain;
+            document.getElementById('resTitle').innerText = data.meta?.title || "Sito Web";
+            document.getElementById('faviconImg').src = data.meta?.favicon || "";
+            
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.innerText = `HTTP ${data.status}`;
+            statusBadge.className = `flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-medium ${
+                data.status < 400 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+            }`;
+
+            document.getElementById('resTime').innerText = `${data.responseTime}ms`;
+            document.getElementById('resServer').innerText = data.server || 'n/a';
+            document.getElementById('resCDN').innerText = data.cdn || 'No CDN';
+            
+            const sslEl = document.getElementById('resSSL');
+            if (data.https) {
+                const providerHtml = (data.ssl && data.ssl.provider && data.ssl.provider !== "n/a") ? `<br><span class="text-[9px] opacity-60">${data.ssl.provider}</span>` : "";
+                sslEl.innerHTML = `<span class="text-emerald-400 font-bold tracking-wide">ATTIVO</span><br><span class="text-[9px] opacity-60 italic">Protocollo TLS</span>${providerHtml}`;
+            } else {
+                sslEl.innerHTML = `<span class="text-rose-400 font-bold tracking-wide">NON ATTIVO</span>`;
+            }
+
+            document.getElementById('resIP').innerText = data.ip_info?.ip || 'n/a';
+            const rep = document.getElementById('resReputation');
+            rep.innerText = data.ip_reputation;
+            rep.className = `text-sm font-medium ${data.ip_reputation.includes('alta') ? 'text-rose-400' : (data.ip_reputation.includes('media') ? 'text-amber-400' : 'text-emerald-400')}`;
+            
+            const repNote = document.getElementById('resRepNote');
+            if (data.ip_reputation_note) {
+                repNote.innerText = data.ip_reputation_note;
+                repNote.classList.remove('hidden');
+            } else {
+                repNote.classList.add('hidden');
+            }
+            
+            const safe = document.getElementById('resSafeBrowsing');
+            safe.innerText = data.safe_browsing === 'clean' ? 'Pulito' : (data.safe_browsing === 'malicious' ? 'Malware!' : 'Sconosciuto');
+            safe.className = `text-sm font-medium ${data.safe_browsing === 'clean' ? 'text-emerald-400' : 'text-rose-400'}`;
+            document.getElementById('resHosting').innerText = data.ip_info?.hosting || 'n/a';
+
+            document.getElementById('resCreated').innerText = data.domain_created ? new Date(data.domain_created).toLocaleDateString() : 'n/a';
+            document.getElementById('resAge').innerText = data.domain_age || 'n/a';
+            document.getElementById('resUpdated').innerText = data.domain_updated ? new Date(data.domain_updated).toLocaleDateString() : 'n/a';
+            
+            const risk = document.getElementById('resRisk');
+            risk.innerText = data.domain_risk === 'high' ? 'Alto' : (data.domain_risk === 'medium' ? 'Medio' : 'Basso');
+            risk.className = `text-sm font-medium ${data.domain_risk === 'high' ? 'text-rose-400' : (data.domain_risk === 'medium' ? 'text-amber-400' : 'text-emerald-400')}`;
+
+            const headerList = document.getElementById('headerList');
+            headerList.innerHTML = '';
+            const headers = [
+                { key: 'HSTS', val: data.security_headers.hsts, desc: 'Strict-Transport-Security' },
+                { key: 'CSP', val: data.security_headers.csp, desc: 'Content-Security-Policy' },
+                { key: 'X-Frame', val: data.security_headers.xframe, desc: 'X-Frame-Options' },
+                { key: 'X-Content', val: data.security_headers.xcontent, desc: 'X-Content-Type-Options' },
+                { key: 'Referrer', val: data.security_headers.referrer, desc: 'Referrer-Policy' }
+            ];
+
+            headers.forEach(h => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-3 bg-slate-900/40 rounded-xl border border-white/5";
+                div.innerHTML = `<div><p class="text-sm font-semibold text-white">${h.key}</p><p class="text-[10px] text-slate-500">${h.desc}</p></div><i data-lucide="${h.val ? 'check-circle' : 'alert-circle'}" class="w-5 h-5 ${h.val ? 'text-emerald-400' : 'text-slate-600'}"></i>`;
+                headerList.appendChild(div);
+            });
+
+            const breakdownList = document.getElementById('breakdownList');
+            breakdownList.innerHTML = '';
+            data.trust_breakdown.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-2 py-1";
+                const isNegative = item.includes('❌');
+                const isWarning = item.includes('⚠');
+                div.innerHTML = `<span class="w-2 h-2 rounded-full ${isNegative ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')}"></span><span class="text-slate-300">${item.replace(/[❌✔⚠]/g, '').trim()}</span>`;
+                breakdownList.appendChild(div);
+            });
+
+            if (data.meta?.description && data.meta.description !== "Non rilevata") {
+                document.getElementById('metaCard').classList.remove('hidden');
+                document.getElementById('resDesc').innerText = data.meta.description;
+            } else document.getElementById('metaCard').classList.add('hidden');
+
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
+            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleScan();
+        });
+    </script>
+</body>
+</html>
