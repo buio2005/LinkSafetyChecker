@@ -7,11 +7,14 @@ dist/
 
 # SECRETS - these must NEVER reach the repository
 .dev.vars
-.dev.vars.*
+.dev.vars.local
 .env
 .env.*
 *.pem
 *.key
+
+# ...but the placeholder template must be committed
+!.dev.vars.example
 
 # OS / editor noise
 .DS_Store

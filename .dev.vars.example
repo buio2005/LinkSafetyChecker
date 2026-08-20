@@ -1,0 +1,8 @@
+# Template for local development.
+#
+# Copy this file, rename the copy to ".dev.vars" and fill in the real values.
+# ".dev.vars" is git-ignored and must NEVER be committed.
+# This template, holding no real values, is safe to keep in the repository.
+
+ABUSEIPDB_KEY="your-abuseipdb-key-here"
+GOOGLE_SAFEBROWSING_KEY="your-google-safe-browsing-key-here"
